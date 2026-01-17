@@ -1,2 +1,2 @@
 # physics-big-project
-物理大项目与
+物理大项目
