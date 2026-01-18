@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>波的叠加与干涉 - 交互可视化</title>
+    <style>
+        body {
+            font-family: 'Noto Sans SC', 'SimHei', Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .visualization {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .controls {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        .control-group {
+            margin: 10px 0;
+        }
+        label {
+            display: inline-block;
+            width: 150px;
+            font-weight: bold;
+        }
+        input[type="range"] {
+            width: 200px;
+        }
+        input[type="number"] {
+            width: 80px;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+        .tab-container {
+            margin: 20px 0;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            margin-right: 5px;
+            border-radius: 4px 4px 0 0;
+            background-color: #f0f0f0;
+        }
+        .tab.active {
+            background-color: white;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .physics-explanation {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #e8f4f8;
+            border-radius: 4px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>波的叠加与干涉 - 交互可视化</h1>
+        
+        <div class="tab-container">
+            <div class="tabs">
+                <div class="tab active" data-tab="superposition">波的叠加</div>
+                <div class="tab" data-tab="standing">驻波</div>
+                <div class="tab" data-tab="interference">二维波的干涉</div>
+            </div>
+            
+            <!-- 波的叠加 -->
+            <div class="tab-content active" id="superposition">
+                <h2>波的叠加与干涉</h2>
+                
+                <div class="controls">
+                    <h3>参数调整</h3>
+                    
+                    <div class="control-group">
+                        <label for="f1">波1频率 (Hz):</label>
+                        <input type="range" id="f1" min="0.1" max="5.0" step="0.1" value="1.0">
+                        <input type="number" id="f1-value" min="0.1" max="5.0" step="0.1" value="1.0">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="f2">波2频率 (Hz):</label>
+                        <input type="range" id="f2" min="0.1" max="5.0" step="0.1" value="1.0">
+                        <input type="number" id="f2-value" min="0.1" max="5.0" step="0.1" value="1.0">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="A1">波1振幅:</label>
+                        <input type="range" id="A1" min="0.1" max="2.0" step="0.1" value="1.0">
+                        <input type="number" id="A1-value" min="0.1" max="2.0" step="0.1" value="1.0">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="A2">波2振幅:</label>
+                        <input type="range" id="A2" min="0.1" max="2.0" step="0.1" value="1.0">
+                        <input type="number" id="A2-value" min="0.1" max="2.0" step="0.1" value="1.0">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="phi1">波1相位 (rad):</label>
+                        <input type="range" id="phi1" min="0" max="6.28" step="0.1" value="0.0">
+                        <input type="number" id="phi1-value" min="0" max="6.28" step="0.1" value="0.0">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="phi2">波2相位 (rad):</label>
+                        <input type="range" id="phi2" min="0" max="6.28" step="0.1" value="0.0">
+                        <input type="number" id="phi2-value" min="0" max="6.28" step="0.1" value="0.0">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="t">时间 (s):</label>
+                        <input type="range" id="t" min="0.0" max="2.0" step="0.05" value="0.0">
+                        <input type="number" id="t-value" min="0.0" max="2.0" step="0.05" value="0.0">
+                    </div>
+                </div>
+                
+                <div class="visualization">
+                    <h3>可视化结果</h3>
+                    <canvas id="superposition-canvas" width="800" height="400"></canvas>
+                </div>
+                
+                <div class="physics-explanation">
+                    <h3>物理原理说明</h3>
+                    <p><strong>波的叠加原理</strong>：几列波在同一介质中传播时，在相遇区域内，任一质点的振动是各列波单独存在时在该点引起的振动的矢量和。</p>
+                    <p><strong>相长干涉</strong>：两列波在某点同相位，振幅相加，强度增强。条件：相位差为 2π 的整数倍。</p>
+                    <p><strong>相消干涉</strong>：两列波在某点反相位，振幅相减，强度减弱。条件：相位差为 π 的奇数倍。</p>
+                    <p><strong>拍现象</strong>：当两列频率相近的波叠加时，会产生振幅随时间周期性变化的现象，称为拍。拍频等于两列波频率之差。</p>
+                </div>
+            </div>
+            
+            <!-- 驻波 -->
+            <div class="tab-content" id="standing">
+                <h2>驻波可视化</h2>
+                
+                <div class="controls">
+                    <h3>参数调整</h3>
+                    
+                    <div class="control-group">
+                        <label for="sf">频率 (Hz):</label>
+                        <input type="range" id="sf" min="0.1" max="3.0" step="0.1" value="1.0">
+                        <input type="number" id="sf-value" min="0.1" max="3.0" step="0.1" value="1.0">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="sA">振幅:</label>
+                        <input type="range" id="sA" min="0.1" max="2.0" step="0.1" value="1.0">
+                        <input type="number" id="sA-value" min="0.1" max="2.0" step="0.1" value="1.0">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="sphi">相位 (rad):</label>
+                        <input type="range" id="sphi" min="0" max="6.28" step="0.1" value="0.0">
+                        <input type="number" id="sphi-value" min="0" max="6.28" step="0.1" value="0.0">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="st">时间 (s):</label>
+                        <input type="range" id="st" min="0.0" max="2.0" step="0.05" value="0.0">
+                        <input type="number" id="st-value" min="0.0" max="2.0" step="0.05" value="0.0">
+                    </div>
+                </div>
+                
+                <div class="visualization">
+                    <h3>可视化结果</h3>
+                    <canvas id="standing-canvas" width="800" height="300"></canvas>
+                </div>
+                
+                <div class="physics-explanation">
+                    <h3>物理原理说明</h3>
+                    <p><strong>驻波</strong>：由两列振幅相同、频率相同、传播方向相反的波叠加形成的波形。</p>
+                    <p><strong>波节</strong>：振幅始终为零的位置，间隔为半个波长。</p>
+                    <p><strong>波腹</strong>：振幅最大的位置，位于波节之间。</p>
+                    <p><strong>特点</strong>：波形不移动，仅在原地振动；能量不传播，而是在波节和波腹之间来回传递。</p>
+                    <p><strong>应用</strong>：弦乐器、管乐器、激光谐振腔等。</p>
+                </div>
+            </div>
+            
+            <!-- 二维波的干涉 -->
+            <div class="tab-content" id="interference">
+                <h2>二维波的干涉图样</h2>
+                
+                <div class="controls">
+                    <h3>参数调整</h3>
+                    
+                    <div class="control-group">
+                        <label for="if1">波源1频率 (Hz):</label>
+                        <input type="range" id="if1" min="0.1" max="3.0" step="0.1" value="1.0">
+                        <input type="number" id="if1-value" min="0.1" max="3.0" step="0.1" value="1.0">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="if2">波源2频率 (Hz):</label>
+                        <input type="range" id="if2" min="0.1" max="3.0" step="0.1" value="1.0">
+                        <input type="number" id="if2-value" min="0.1" max="3.0" step="0.1" value="1.0">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="iA1">波源1振幅:</label>
+                        <input type="range" id="iA1" min="0.1" max="2.0" step="0.1" value="1.0">
+                        <input type="number" id="iA1-value" min="0.1" max="2.0" step="0.1" value="1.0">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="iA2">波源2振幅:</label>
+                        <input type="range" id="iA2" min="0.1" max="2.0" step="0.1" value="1.0">
+                        <input type="number" id="iA2-value" min="0.1" max="2.0" step="0.1" value="1.0">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="iphi1">波源1相位 (rad):</label>
+                        <input type="range" id="iphi1" min="0" max="6.28" step="0.1" value="0.0">
+                        <input type="number" id="iphi1-value" min="0" max="6.28" step="0.1" value="0.0">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="iphi2">波源2相位 (rad):</label>
+                        <input type="range" id="iphi2" min="0" max="6.28" step="0.1" value="0.0">
+                        <input type="number" id="iphi2-value" min="0" max="6.28" step="0.1" value="0.0">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="it">时间 (s):</label>
+                        <input type="range" id="it" min="0.0" max="2.0" step="0.05" value="0.0">
+                        <input type="number" id="it-value" min="0.0" max="2.0" step="0.05" value="0.0">
+                    </div>
+                </div>
+                
+                <div class="visualization">
+                    <h3>可视化结果</h3>
+                    <canvas id="interference-canvas" width="600" height="500"></canvas>
+                    <div id="colorbar" style="width: 600px; height: 20px; margin-top: 10px; background: linear-gradient(to right, blue, cyan, green, yellow, red);"></div>
+                    <p style="text-align: center; font-size: 12px;">干涉强度</p>
+                </div>
+                
+                <div class="physics-explanation">
+                    <h3>物理原理说明</h3>
+                    <p><strong>二维波的干涉</strong>：两个相干波源发出的波在空间叠加形成的现象。</p>
+                    <p><strong>干涉条纹</strong>：形成明暗相间的条纹，明条纹对应相长干涉，暗条纹对应相消干涉。</p>
+                    <p><strong>明条纹条件</strong>：到两个波源的距离差为波长的整数倍。</p>
+                    <p><strong>暗条纹条件</strong>：到两个波源的距离差为半波长的奇数倍。</p>
+                    <p><strong>应用</strong>：双缝干涉实验、薄膜干涉、全息摄影等。</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="usage-instructions">
+            <h2>使用说明</h2>
+            <h3>基本操作</h3>
+            <ol>
+                <li>在上方选择要查看的可视化类型：波的叠加、驻波或二维波的干涉</li>
+                <li>使用滑块调整各个参数（频率、振幅、相位、时间）</li>
+                <li>观察参数变化时，波形或干涉图样的变化</li>
+                <li>查看每个可视化类型下方的物理原理说明，了解相关概念</li>
+            </ol>
+            
+            <h3>参数说明</h3>
+            <table>
+                <tr>
+                    <th>参数</th>
+                    <th>范围</th>
+                    <th>说明</th>
+                </tr>
+                <tr>
+                    <td>频率</td>
+                    <td>0.1-5.0 Hz</td>
+                    <td>波的振荡频率，影响波的周期和波长</td>
+                </tr>
+                <tr>
+                    <td>振幅</td>
+                    <td>0.1-2.0</td>
+                    <td>波的最大振幅，影响波的强度</td>
+                </tr>
+                <tr>
+                    <td>相位</td>
+                    <td>0-2π rad</td>
+                    <td>波的初始相位，影响波的起始位置</td>
+                </tr>
+                <tr>
+                    <td>时间</td>
+                    <td>0-2.0 s</td>
+                    <td>观察时间点，影响波的传播状态</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // 波的叠加函数
+        function wave_superposition(x, t, f1, f2, A1, A2, phi1, phi2) {
+            const k = 2 * Math.PI; // 波数
+            const wave1 = A1 * Math.sin(k * x - 2 * Math.PI * f1 * t + phi1);
+            const wave2 = A2 * Math.sin(k * x - 2 * Math.PI * f2 * t + phi2);
+            const superposed = wave1 + wave2;
+            return [wave1, wave2, superposed];
+        }
+
+        // 驻波函数
+        function standing_wave(x, t, f, A, phi) {
+            const k = 2 * Math.PI; // 波数
+            const omega = 2 * Math.PI * f; // 角频率
+            return 2 * A * Math.cos(omega * t + phi) * Math.sin(k * x);
+        }
+
+        // 二维波的干涉函数
+        function wave_interference(x, y, t, f1, f2, A1, A2, phi1, phi2) {
+            // 波源位置
+            const x1 = 1.0, y1 = 2.0;
+            const x2 = 3.0, y2 = 2.0;
+            
+            // 波数和角频率
+            const k = 2 * Math.PI;
+            const omega1 = 2 * Math.PI * f1;
+            const omega2 = 2 * Math.PI * f2;
+            
+            // 计算到两个波源的距离
+            const r1 = Math.sqrt(Math.pow(x - x1, 2) + Math.pow(y - y1, 2));
+            const r2 = Math.sqrt(Math.pow(x - x2, 2) + Math.pow(y - y2, 2));
+            
+            // 计算两个波的相位
+            const phase1 = k * r1 - omega1 * t + phi1;
+            const phase2 = k * r2 - omega2 * t + phi2;
+            
+            // 计算两个波的振幅
+            const wave1 = A1 * Math.sin(phase1);
+            const wave2 = A2 * Math.sin(phase2);
+            
+            // 干涉强度（振幅的平方）
+            return Math.pow(wave1 + wave2, 2);
+        }
+
+        // 绘制波的叠加
+        function draw_superposition() {
+            const canvas = document.getElementById('superposition-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 获取参数
+            const f1 = parseFloat(document.getElementById('f1').value);
+            const f2 = parseFloat(document.getElementById('f2').value);
+            const A1 = parseFloat(document.getElementById('A1').value);
+            const A2 = parseFloat(document.getElementById('A2').value);
+            const phi1 = parseFloat(document.getElementById('phi1').value);
+            const phi2 = parseFloat(document.getElementById('phi2').value);
+            const t = parseFloat(document.getElementById('t').value);
+            
+            // 清除画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制单个波
+            ctx.beginPath();
+            ctx.strokeStyle = 'blue';
+            ctx.lineWidth = 2;
+            
+            const x_min = 0, x_max = 4;
+            const y_min = -3, y_max = 3;
+            const x_scale = canvas.width / (x_max - x_min);
+            const y_scale = canvas.height / (y_max - y_min);
+            
+            for (let x = 0; x < canvas.width; x++) {
+                const x_val = x_min + x / x_scale;
+                const [wave1, wave2, superposed] = wave_superposition(x_val, t, f1, f2, A1, A2, phi1, phi2);
+                const y = canvas.height - (wave1 - y_min) * y_scale;
+                
+                if (x === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // 绘制第二个波
+            ctx.beginPath();
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+            
+            for (let x = 0; x < canvas.width; x++) {
+                const x_val = x_min + x / x_scale;
+                const [wave1, wave2, superposed] = wave_superposition(x_val, t, f1, f2, A1, A2, phi1, phi2);
+                const y = canvas.height - (wave2 - y_min) * y_scale;
+                
+                if (x === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // 绘制叠加后的波
+            ctx.beginPath();
+            ctx.strokeStyle = 'green';
+            ctx.lineWidth = 3;
+            
+            for (let x = 0; x < canvas.width; x++) {
+                const x_val = x_min + x / x_scale;
+                const [wave1, wave2, superposed] = wave_superposition(x_val, t, f1, f2, A1, A2, phi1, phi2);
+                const y = canvas.height - (superposed - y_min) * y_scale;
+                
+                if (x === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // 绘制坐标轴
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height - (0 - y_min) * y_scale);
+            ctx.lineTo(canvas.width, canvas.height - (0 - y_min) * y_scale);
+            ctx.stroke();
+            
+            // 添加图例
+            ctx.font = '12px Arial';
+            ctx.fillStyle = 'blue';
+            ctx.fillText('波1', 10, 20);
+            ctx.fillStyle = 'red';
+            ctx.fillText('波2', 10, 40);
+            ctx.fillStyle = 'green';
+            ctx.fillText('叠加后的波', 10, 60);
+        }
+
+        // 绘制驻波
+        function draw_standing() {
+            const canvas = document.getElementById('standing-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 获取参数
+            const f = parseFloat(document.getElementById('sf').value);
+            const A = parseFloat(document.getElementById('sA').value);
+            const phi = parseFloat(document.getElementById('sphi').value);
+            const t = parseFloat(document.getElementById('st').value);
+            
+            // 清除画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制驻波
+            ctx.beginPath();
+            ctx.strokeStyle = 'purple';
+            ctx.lineWidth = 2;
+            
+            const x_min = 0, x_max = 4;
+            const y_min = -3, y_max = 3;
+            const x_scale = canvas.width / (x_max - x_min);
+            const y_scale = canvas.height / (y_max - y_min);
+            
+            for (let x = 0; x < canvas.width; x++) {
+                const x_val = x_min + x / x_scale;
+                const wave = standing_wave(x_val, t, f, A, phi);
+                const y = canvas.height - (wave - y_min) * y_scale;
+                
+                if (x === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // 绘制波节位置
+            const wave_nodes = [];
+            const wavelength = 1 / f; // 假设波速为1 m/s
+            for (let n = 0; n <= 4 / wavelength; n++) {
+                wave_nodes.push(n * wavelength / 2);
+            }
+            
+            ctx.fillStyle = 'red';
+            for (const node_x of wave_nodes) {
+                const x = node_x * x_scale;
+                const y = canvas.height - (0 - y_min) * y_scale;
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+            
+            // 绘制坐标轴
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height - (0 - y_min) * y_scale);
+            ctx.lineTo(canvas.width, canvas.height - (0 - y_min) * y_scale);
+            ctx.stroke();
+            
+            // 添加图例
+            ctx.font = '12px Arial';
+            ctx.fillStyle = 'purple';
+            ctx.fillText('驻波', 10, 20);
+            ctx.fillStyle = 'red';
+            ctx.fillText('波节', 10, 40);
+        }
+
+        // 绘制二维波的干涉
+        function draw_interference() {
+            const canvas = document.getElementById('interference-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 获取参数
+            const f1 = parseFloat(document.getElementById('if1').value);
+            const f2 = parseFloat(document.getElementById('if2').value);
+            const A1 = parseFloat(document.getElementById('iA1').value);
+            const A2 = parseFloat(document.getElementById('iA2').value);
+            const phi1 = parseFloat(document.getElementById('iphi1').value);
+            const phi2 = parseFloat(document.getElementById('iphi2').value);
+            const t = parseFloat(document.getElementById('it').value);
+            
+            // 清除画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制干涉图样
+            const x_min = 0, x_max = 4;
+            const y_min = 0, y_max = 4;
+            const x_scale = canvas.width / (x_max - x_min);
+            const y_scale = canvas.height / (y_max - y_min);
+            
+            const grid_size = 200;
+            const cell_width = canvas.width / grid_size;
+            const cell_height = canvas.height / grid_size;
+            
+            for (let i = 0; i < grid_size; i++) {
+                for (let j = 0; j < grid_size; j++) {
+                    const x = x_min + (i / grid_size) * (x_max - x_min);
+                    const y = y_min + (j / grid_size) * (y_max - y_min);
+                    
+                    const intensity = wave_interference(x, y, t, f1, f2, A1, A2, phi1, phi2);
+                    const normalized_intensity = Math.min(intensity / 16, 1); // 归一化到0-1
+                    
+                    // 根据强度设置颜色
+                    const r = Math.floor(normalized_intensity * 255);
+                    const g = Math.floor((1 - Math.abs(normalized_intensity - 0.5) * 2) * 255);
+                    const b = Math.floor((1 - normalized_intensity) * 255);
+                    
+                    ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                    ctx.fillRect(i * cell_width, j * cell_height, cell_width, cell_height);
+                }
+            }
+            
+            // 标记波源位置
+            ctx.fillStyle = 'white';
+            const source1_x = 1.0 * x_scale;
+            const source1_y = 2.0 * y_scale;
+            const source2_x = 3.0 * x_scale;
+            const source2_y = 2.0 * y_scale;
+            
+            ctx.beginPath();
+            ctx.arc(source1_x, source1_y, 5, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(source2_x, source2_y, 5, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // 添加图例
+            ctx.font = '12px Arial';
+            ctx.fillStyle = 'white';
+            ctx.fillText('波源', 10, 20);
+        }
+
+        // 初始化标签页
+        function initTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // 移除所有标签页的活动状态
+                    tabs.forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // 添加当前标签页的活动状态
+                    tab.classList.add('active');
+                    const tabId = tab.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                    
+                    // 重新绘制当前标签页的内容
+                    if (tabId === 'superposition') {
+                        draw_superposition();
+                    } else if (tabId === 'standing') {
+                        draw_standing();
+                    } else if (tabId === 'interference') {
+                        draw_interference();
+                    }
+                });
+            });
+        }
+
+        // 初始化事件监听器
+        function initEventListeners() {
+            // 波的叠加参数
+            document.getElementById('f1').addEventListener('input', function() {
+                document.getElementById('f1-value').value = this.value;
+                draw_superposition();
+            });
+            
+            document.getElementById('f1-value').addEventListener('input', function() {
+                document.getElementById('f1').value = this.value;
+                draw_superposition();
+            });
+            
+            document.getElementById('f2').addEventListener('input', function() {
+                document.getElementById('f2-value').value = this.value;
+                draw_superposition();
+            });
+            
+            document.getElementById('f2-value').addEventListener('input', function() {
+                document.getElementById('f2').value = this.value;
+                draw_superposition();
+            });
+            
+            document.getElementById('A1').addEventListener('input', function() {
+                document.getElementById('A1-value').value = this.value;
+                draw_superposition();
+            });
+            
+            document.getElementById('A1-value').addEventListener('input', function() {
+                document.getElementById('A1').value = this.value;
+                draw_superposition();
+            });
+            
+            document.getElementById('A2').addEventListener('input', function() {
+                document.getElementById('A2-value').value = this.value;
+                draw_superposition();
+            });
+            
+            document.getElementById('A2-value').addEventListener('input', function() {
+                document.getElementById('A2').value = this.value;
+                draw_superposition();
+            });
+            
+            document.getElementById('phi1').addEventListener('input', function() {
+                document.getElementById('phi1-value').value = this.value;
+                draw_superposition();
+            });
+            
+            document.getElementById('phi1-value').addEventListener('input', function() {
+                document.getElementById('phi1').value = this.value;
+                draw_superposition();
+            });
+            
+            document.getElementById('phi2').addEventListener('input', function() {
+                document.getElementById('phi2-value').value = this.value;
+                draw_superposition();
+            });
+            
+            document.getElementById('phi2-value').addEventListener('input', function() {
+                document.getElementById('phi2').value = this.value;
+                draw_superposition();
+            });
+            
+            document.getElementById('t').addEventListener('input', function() {
+                document.getElementById('t-value').value = this.value;
+                draw_superposition();
+            });
+            
+            document.getElementById('t-value').addEventListener('input', function() {
+                document.getElementById('t').value = this.value;
+                draw_superposition();
+            });
+            
+            // 驻波参数
+            document.getElementById('sf').addEventListener('input', function() {
+                document.getElementById('sf-value').value = this.value;
+                draw_standing();
+            });
+            
+            document.getElementById('sf-value').addEventListener('input', function() {
+                document.getElementById('sf').value = this.value;
+                draw_standing();
+            });
+            
+            document.getElementById('sA').addEventListener('input', function() {
+                document.getElementById('sA-value').value = this.value;
+                draw_standing();
+            });
+            
+            document.getElementById('sA-value').addEventListener('input', function() {
+                document.getElementById('sA').value = this.value;
+                draw_standing();
+            });
+            
+            document.getElementById('sphi').addEventListener('input', function() {
+                document.getElementById('sphi-value').value = this.value;
+                draw_standing();
+            });
+            
+            document.getElementById('sphi-value').addEventListener('input', function() {
+                document.getElementById('sphi').value = this.value;
+                draw_standing();
+            });
+            
+            document.getElementById('st').addEventListener('input', function() {
+                document.getElementById('st-value').value = this.value;
+                draw_standing();
+            });
+            
+            document.getElementById('st-value').addEventListener('input', function() {
+                document.getElementById('st').value = this.value;
+                draw_standing();
+            });
+            
+            // 二维波的干涉参数
+            document.getElementById('if1').addEventListener('input', function() {
+                document.getElementById('if1-value').value = this.value;
+                draw_interference();
+            });
+            
+            document.getElementById('if1-value').addEventListener('input', function() {
+                document.getElementById('if1').value = this.value;
+                draw_interference();
+            });
+            
+            document.getElementById('if2').addEventListener('input', function() {
+                document.getElementById('if2-value').value = this.value;
+                draw_interference();
+            });
+            
+            document.getElementById('if2-value').addEventListener('input', function() {
+                document.getElementById('if2').value = this.value;
+                draw_interference();
+            });
+            
+            document.getElementById('iA1').addEventListener('input', function() {
+                document.getElementById('iA1-value').value = this.value;
+                draw_interference();
+            });
+            
+            document.getElementById('iA1-value').addEventListener('input', function() {
+                document.getElementById('iA1').value = this.value;
+                draw_interference();
+            });
+            
+            document.getElementById('iA2').addEventListener('input', function() {
+                document.getElementById('iA2-value').value = this.value;
+                draw_interference();
+            });
+            
+            document.getElementById('iA2-value').addEventListener('input', function() {
+                document.getElementById('iA2').value = this.value;
+                draw_interference();
+            });
+            
+            document.getElementById('iphi1').addEventListener('input', function() {
+                document.getElementById('iphi1-value').value = this.value;
+                draw_interference();
+            });
+            
+            document.getElementById('iphi1-value').addEventListener('input', function() {
+                document.getElementById('iphi1').value = this.value;
+                draw_interference();
+            });
+            
+            document.getElementById('iphi2').addEventListener('input', function() {
+                document.getElementById('iphi2-value').value = this.value;
+                draw_interference();
+            });
+            
+            document.getElementById('iphi2-value').addEventListener('input', function() {
+                document.getElementById('iphi2').value = this.value;
+                draw_interference();
+            });
+            
+            document.getElementById('it').addEventListener('input', function() {
+                document.getElementById('it-value').value = this.value;
+                draw_interference();
+            });
+            
+            document.getElementById('it-value').addEventListener('input', function() {
+                document.getElementById('it').value = this.value;
+                draw_interference();
+            });
+        }
+
+        // 初始化
+        window.onload = function() {
+            initTabs();
+            initEventListeners();
+            draw_superposition();
+            draw_standing();
+            draw_interference();
+        };
+    </script>
+</body>
+</html>

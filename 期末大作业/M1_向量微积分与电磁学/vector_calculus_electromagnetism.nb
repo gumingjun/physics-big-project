@@ -1,0 +1,113 @@
+(* 题目 M1：矢量运算与电磁学应用 - 完整代码 *)
+
+(* 任务一：矢量微积分 *)
+
+(* 1. 叉积和旋度 *)
+(* 定义矢量场 *)
+A = {y, -x, z};
+B = {x^2, y^2, z^2};
+
+(* 计算叉积 A*B *)
+crossProduct = Cross[A, B]
+
+(* 计算旋度 \[Del]*A *)
+curlA = Curl[A, {x, y, z}]
+
+(* 计算旋度 \[Del]*B *)
+curlB = Curl[B, {x, y, z}]
+
+(* 验证恒等式 \[Del]*(\[Del]\[CurlyPhi])=0，其中\[CurlyPhi]是任意标量场 *)
+phi = x^2 y + y^2 z + z^2 x; (* 定义一个标量场 *)
+gradPhi = Grad[phi, {x, y, z}]; (* 计算梯度 *)
+curlGradPhi = Curl[gradPhi, {x, y, z}]; (* 计算梯度的旋度 *)
+
+(* 2. 散度与通量 *)
+(* 定义矢量场 F=(x,y,z)/r³，其中r=\[Sqrt](x²+y²+z²) *)
+r = Sqrt[x^2 + y^2 + z^2];
+F = {x, y, z}/r^3;
+
+(* 计算散度 \[Del]\[CenterDot]F (r!=0) *)
+divF = Div[F, {x, y, z}]
+
+(* 绘制矢量场 F *)
+VectorPlot3D[F, {x, -2, 2}, {y, -2, 2}, {z, -2, 2}, 
+  VectorPoints -> 8, 
+  VectorStyle -> {Red, Arrowheads[0.03]}, 
+  PlotLegends -> Automatic]
+
+(* 任务二：静电场的计算 *)
+
+(* 1. 点电荷系统 *)
+(* 定义常数 *)
+q = 1;
+k = 1; (* k = 1/(4\[Pi]\[CurlyEpsilon]₀) *)
+
+(* 定义点电荷位置和电荷量 *)
+charges = {
+  {q, {1, 0, 0}},   (* +q 在 (1,0,0) *)
+  {q, {-1, 0, 0}},  (* +q 在 (-1,0,0) *)
+  {-2 q, {0, 0, 1}} (* -2q 在 (0,0,1) *)
+};
+
+(* 计算总电势 \[CurlyPhi](x,y,z) *)
+potential[x_, y_, z_] := Module[{total},
+  total = 0;
+  Do[
+    total += k * charges[[i, 1]] / Sqrt[(x - charges[[i, 2, 1]])^2 + (y - charges[[i, 2, 2]])^2 + (z - charges[[i, 2, 3]])^2],
+    {i, 1, Length[charges]}
+  ];
+  total
+]
+
+(* 绘制 z=0 平面上的等势线 *)
+ContourPlot[potential[x, y, 0], {x, -3, 3}, {y, -3, 3}, 
+  Contours -> 20, 
+  ColorFunction -> "Rainbow", 
+  PlotLegends -> Automatic, 
+  PlotLabel -> "z=0 平面上的等势线"]
+
+(* 绘制 z=0 平面上的电场线 *)
+(* 重新定义电场计算函数，避免导数计算问题 *)
+electricField2D[x_, y_] := Module[{ex, ey, r1, r2, r3, q1, q2, q3, pos1, pos2, pos3},
+  (* 电荷和位置 *)
+  q1 = 1; pos1 = {1, 0, 0};
+  q2 = 1; pos2 = {-1, 0, 0};
+  q3 = -2; pos3 = {0, 0, 1};
+  
+  (* 计算距离 *)
+  r1 = Sqrt[(x - pos1[[1]])^2 + (y - pos1[[2]])^2 + (0 - pos1[[3]])^2];
+  r2 = Sqrt[(x - pos2[[1]])^2 + (y - pos2[[2]])^2 + (0 - pos2[[3]])^2];
+  r3 = Sqrt[(x - pos3[[1]])^2 + (y - pos3[[2]])^2 + (0 - pos3[[3]])^2];
+  
+  (* 计算电场分量 (库仑定律) *)
+  ex = q1*(x - pos1[[1]])/r1^3 + q2*(x - pos2[[1]])/r2^3 + q3*(x - pos3[[1]])/r3^3;
+  ey = q1*(y - pos1[[2]])/r1^3 + q2*(y - pos2[[2]])/r2^3 + q3*(y - pos3[[2]])/r3^3;
+  
+  {ex, ey}
+]
+
+(* 绘制电场线 *)
+StreamPlot[electricField2D[x, y], {x, -3, 3}, {y, -3, 3}, 
+  StreamPoints -> {{{-2, 0}, Automatic}, {{2, 0}, Automatic}, {{0, -2}, Automatic}, {{0, 2}, Automatic},
+                   {{-1.5, 1.5}, Automatic}, {{1.5, 1.5}, Automatic}, {{-1.5, -1.5}, Automatic}, {{1.5, -1.5}, Automatic}},
+  StreamStyle -> {Blue, Arrowheads[0.03]},
+  PlotRange -> {{-3, 3}, {-3, 3}},
+  Axes -> True,
+  PlotLabel -> "z=0 平面上的电场线"]
+
+(* 2. 找出电场零点 *)
+(* 寻找电场为零的点 *)
+(* 假设零点在 z 轴上，即 x=0, y=0 *)
+(* 直接计算 z 分量的导数 *)
+dz = D[potential[0, 0, z], z];
+zeroPointZAxis = NSolve[{dz == 0}, z]
+
+(* 在图中标出零点 *)
+Show[
+  ContourPlot[potential[x, y, 0], {x, -3, 3}, {y, -3, 3}, 
+    Contours -> 20, 
+    ColorFunction -> "Rainbow", 
+    PlotLegends -> Automatic],
+  Graphics[{Red, PointSize[0.03], Point[{0, 0}]}], (* 标出原点 *)
+  PlotLabel -> "z=0 平面上的等势线与电场零点"
+]

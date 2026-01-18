@@ -1,0 +1,147 @@
+(* 题目 M2：微分方程与物理振动 *)
+(* 任务一：阻尼振动的完整分析 *)
+
+Clear["Global`*"]
+
+(* 1. 解析解 *)
+
+(* 定义微分方程 *)
+m = 1;
+k = 1;
+
+(* 阻尼谐振子的微分方程 *)
+diffEq = m x''[t] + \[Gamma] x'[t] + k x[t] == 0;
+
+(* 求解通解 *)
+generalSol = DSolve[diffEq, x[t], t]
+
+(* 讨论三种阻尼情况 *)
+
+(* 初始条件 *)
+initCond = {x[0] == 1, x'[0] == 0};
+
+(* 情况1：欠阻尼 \[Gamma]=0.2 *)
+\[Gamma]1 = 0.2;
+diffEq1 = diffEq /. \[Gamma] -> \[Gamma]1;
+sol1 = DSolve[{diffEq1, initCond}, x[t], t][[1]]
+
+(* 情况2：临界阻尼 \[Gamma]=2 *)
+\[Gamma]2 = 2;
+diffEq2 = diffEq /. \[Gamma] -> \[Gamma]2;
+sol2 = DSolve[{diffEq2, initCond}, x[t], t][[1]]
+
+(* 情况3：过阻尼 \[Gamma]=4 *)
+\[Gamma]3 = 4;
+diffEq3 = diffEq /. \[Gamma] -> \[Gamma]3;
+sol3 = DSolve[{diffEq3, initCond}, x[t], t][[1]]
+
+(* 2. 可视化比较 *)
+
+(* 绘制三种阻尼情况的x(t)曲线 *)
+tRange = {t, 0, 15};
+
+Plot[
+  {x[t] /. sol1, x[t] /. sol2, x[t] /. sol3},
+  tRange,
+  PlotLegends -> {"欠阻尼 (\[Gamma]=0.2)", "临界阻尼 (\[Gamma]=2)", "过阻尼 (\[Gamma]=4)"},
+  PlotStyle -> {{Red, Thick}, {Blue, Thick}, {Green, Thick}},
+  AxesLabel -> {"时间 t (s)", "位移 x(t)"},
+  PlotLabel -> "不同阻尼情况下的振动曲线"
+]
+
+(* 绘制相空间轨迹 (x, x') *)
+
+(* 计算速度 x'[t] *)
+v1[t_] = D[x[t] /. sol1, t];
+v2[t_] = D[x[t] /. sol2, t];
+v3[t_] = D[x[t] /. sol3, t];
+
+ParametricPlot[
+  {{x[t] /. sol1, v1[t]}, {x[t] /. sol2, v2[t]}, {x[t] /. sol3, v3[t]}},
+  tRange,
+  PlotLegends -> {"欠阻尼 (\[Gamma]=0.2)", "临界阻尼 (\[Gamma]=2)", "过阻尼 (\[Gamma]=4)"},
+  PlotStyle -> {{Red, Thick}, {Blue, Thick}, {Green, Thick}},
+  AxesLabel -> {"位移 x(t)", "速度 v(t)"},
+  PlotLabel -> "不同阻尼情况下的相空间轨迹"
+]
+
+(* 任务二：简单受迫振动 *)
+
+(* 1. 稳态响应 *)
+
+(* 定义受迫振动的微分方程 *)
+F0 = 1;
+diffEqForced = m x''[t] + \[Gamma] x'[t] + k x[t] == F0 Cos[\[Omega] t];
+
+(* 取参数值 *)
+m = 1;
+k = 1;
+\[Gamma] = 0.2;
+F0 = 1;
+
+(* 计算稳态振幅 A(\[Omega]) 使用解析公式 *)
+A\[Omega] = F0 / Sqrt[(k - m \[Omega]^2)^2 + (\[Gamma] \[Omega])^2]
+
+(* 绘制振幅-频率响应曲线 *)
+\[Omega]Range = {\[Omega], 0, 3};
+
+Plot[
+  A\[Omega],
+  \[Omega]Range,
+  PlotStyle -> {Purple, Thick},
+  AxesLabel -> {"驱动频率 \[Omega] (rad/s)", "稳态振幅 A(\[Omega])"},
+  PlotLabel -> "受迫振动的幅频响应曲线（共振曲线）",
+  GridLines -> Automatic
+]
+
+(* 计算共振频率和最大振幅 *)
+(* 共振频率 \[Omega]_r = Sqrt[\[Omega]0^2 - (\[Gamma]/(2m))^2]，其中 \[Omega]0 = Sqrt[k/m] *)
+\[Omega]0 = Sqrt[k/m];
+\[Omega]r = Sqrt[\[Omega]0^2 - (\[Gamma]/(2m))^2]
+
+(* 最大振幅 *)
+Amax = A\[Omega] /. \[Omega] -> \[Omega]r
+
+(* 在图中标出共振频率和最大振幅 *)
+Plot[
+  A\[Omega],
+  \[Omega]Range,
+  PlotStyle -> {Purple, Thick},
+  AxesLabel -> {"驱动频率 \[Omega] (rad/s)", "稳态振幅 A(\[Omega])"},
+  PlotLabel -> "受迫振动的幅频响应曲线（标注共振点）",
+  Epilog -> {
+    Text[Style["共振点 (\[Omega]r, Amax)", Red, 12], {\[Omega]r + 0.1, Amax + 0.2}],
+    Text[Style[ToString[\[Omega]r] <> " rad/s", Gray, 10], {\[Omega]r + 0.1, 0.2}],
+    Text[Style[ToString[N[Amax]] <> " m", Gray, 10], {0.1, Amax + 0.1}],
+    (* 添加水平线和垂直线 *)
+    Gray, Dashed,
+    Line[{{0, Amax}, {3, Amax}}], (* 水平线 *)
+    Line[{{\[Omega]r, 0}, {\[Omega]r, Amax + 0.5}}] (* 垂直线 *)
+  },
+  GridLines -> Automatic
+]
+
+(* 2. 数值求解 *)
+
+(* 定义初始条件 *)
+initCondForced = {x[0] == 0, x'[0] == 0};
+
+(* 定义驱动频率列表 *)
+\[Omega]List = {0.5, 1.0, 1.5};
+
+(* 使用NDSolve求解不同\[Omega]下的解 *)
+solNDSolveList = Table[
+  NDSolve[{diffEqForced /. \[Omega] -> \[Omega]i, initCondForced}, x[t], {t, 0, 20}],
+  {\[Omega]i, \[Omega]List}
+];
+
+(* 绘制不同\[Omega]下的x(t)曲线 *)
+Plot[
+  Evaluate[Table[x[t] /. solNDSolveList[[i, 1]], {i, Length[\[Omega]List]}]],
+  {t, 0, 20},
+  PlotLegends -> Table["\[Omega] = " <> ToString[\[Omega]i], {\[Omega]i, \[Omega]List}],
+  PlotStyle -> {{Red, Thick}, {Blue, Thick}, {Green, Thick}},
+  AxesLabel -> {"时间 t (s)", "位移 x(t)"},
+  PlotLabel -> "不同驱动频率下的受迫振动曲线",
+  GridLines -> Automatic
+]
